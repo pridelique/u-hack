@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react'
-import { MapPin } from 'lucide-react'
+import { LoaderCircle, MapPin } from 'lucide-react'
 import { LOCATIONS } from '../data/locations'
 import { loadGoogleMaps } from '../services/googleMaps'
 import type { Location } from '../types'
@@ -10,120 +10,211 @@ interface Props {
   onChange: (location: Location) => void
 }
 
-const coordinate = (value: unknown) => {
-  if (typeof value === 'function') return Number(value())
-  return Number(value)
+type PlaceOption = {
+  id: string
+  label: string
+  secondary?: string
+  location?: Location
+  prediction?: any
+}
+
+const THAILAND_BOUNDS = { west: 97.3, south: 5.6, east: 105.7, north: 20.5 }
+
+const coordinate = (value: unknown) => (
+  typeof value === 'function' ? Number(value()) : Number(value)
+)
+
+const savedOptions = (query: string): PlaceOption[] => {
+  const normalized = query.trim().toLowerCase()
+  return LOCATIONS
+    .filter((location) => !normalized
+      || location.shortName.toLowerCase().includes(normalized)
+      || location.name.toLowerCase().includes(normalized))
+    .slice(0, 5)
+    .map((location) => ({
+      id: location.placeId ?? location.shortName,
+      label: location.shortName,
+      secondary: location.name,
+      location,
+    }))
 }
 
 export function LocationInput({ label, value, onChange }: Props) {
-  const mountRef = useRef<HTMLDivElement>(null)
-  const autocompleteRef = useRef<any>(null)
-  const onChangeRef = useRef(onChange)
-  const [fallback, setFallback] = useState(false)
-  const listId = useId().replace(/:/g, '')
+  const listId = useId()
+  const placesLibrary = useRef<any>(null)
+  const sessionToken = useRef<any>(null)
+  const newestRequest = useRef(0)
+  const [query, setQuery] = useState(value.shortName)
+  const [options, setOptions] = useState<PlaceOption[]>([])
+  const [open, setOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [activeIndex, setActiveIndex] = useState(-1)
+  const [placesUnavailable, setPlacesUnavailable] = useState(false)
 
-  useEffect(() => { onChangeRef.current = onChange }, [onChange])
+  useEffect(() => { setQuery(value.shortName) }, [value.placeId, value.shortName])
 
   useEffect(() => {
     let cancelled = false
-    let autocomplete: any
-    let handleSelect: ((event: any) => Promise<void>) | undefined
-    let handleError: (() => void) | undefined
-
-    const setup = async () => {
-      await loadGoogleMaps()
-      const places = await window.google?.maps?.importLibrary('places')
-      if (cancelled || !mountRef.current || !places?.PlaceAutocompleteElement) {
-        if (!cancelled) setFallback(true)
-        return
-      }
-
-      autocomplete = new places.PlaceAutocompleteElement({
-        includedRegionCodes: ['th'],
-        locationBias: { center: { lat: 13.7563, lng: 100.5018 }, radius: 200_000 },
-        requestedLanguage: 'en',
-        requestedRegion: 'th',
+    loadGoogleMaps()
+      .then(() => window.google?.maps?.importLibrary('places'))
+      .then((library: any) => {
+        if (cancelled || !library?.AutocompleteSuggestion) return
+        placesLibrary.current = library
+        sessionToken.current = new library.AutocompleteSessionToken()
+        setPlacesUnavailable(false)
       })
-      autocomplete.value = value.shortName
-      autocomplete.placeholder = `Search ${label.toLowerCase()}`
-      autocomplete.className = 'place-autocomplete'
-      autocomplete.setAttribute('aria-label', label)
-
-      handleSelect = async (event: any) => {
-        try {
-          const place = event.placePrediction?.toPlace()
-          if (!place) return
-          await place.fetchFields({ fields: ['id', 'displayName', 'formattedAddress', 'location'] })
-          if (!place.location) return
-          const lat = coordinate(place.location.lat)
-          const lng = coordinate(place.location.lng)
-          if (!Number.isFinite(lat) || !Number.isFinite(lng)) return
-          onChangeRef.current({
-            name: place.formattedAddress ?? place.displayName ?? 'Selected location',
-            shortName: place.displayName ?? place.formattedAddress ?? 'Selected location',
-            lat,
-            lng,
-            placeId: place.id,
-          })
-        } catch {
-          setFallback(true)
-        }
-      }
-      handleError = () => setFallback(true)
-      autocomplete.addEventListener('gmp-select', handleSelect)
-      autocomplete.addEventListener('gmp-error', handleError)
-      mountRef.current.replaceChildren(autocomplete)
-      autocompleteRef.current = autocomplete
-    }
-
-    setup().catch(() => { if (!cancelled) setFallback(true) })
-    return () => {
-      cancelled = true
-      if (autocomplete && handleSelect) autocomplete.removeEventListener('gmp-select', handleSelect)
-      if (autocomplete && handleError) autocomplete.removeEventListener('gmp-error', handleError)
-      if (autocompleteRef.current === autocomplete) autocompleteRef.current = null
-      autocomplete?.remove()
-    }
-  }, [label])
+      .catch(() => { if (!cancelled) setPlacesUnavailable(true) })
+    return () => { cancelled = true }
+  }, [])
 
   useEffect(() => {
-    if (autocompleteRef.current && autocompleteRef.current.value !== value.shortName) {
-      autocompleteRef.current.value = value.shortName
-    }
-  }, [value.placeId, value.shortName])
+    if (!open) return
+    const local = savedOptions(query)
+    const input = query.trim()
+    const library = placesLibrary.current
 
-  const selectFallback = (text: string) => {
-    const normalized = text.trim().toLowerCase()
-    const match = LOCATIONS.find((location) => (
-      location.shortName.toLowerCase() === normalized || location.name.toLowerCase() === normalized
-    ))
-    if (match) onChange(match)
+    if (input.length < 2 || !library) {
+      setOptions(local)
+      setLoading(false)
+      return
+    }
+
+    const requestId = ++newestRequest.current
+    setLoading(true)
+    const timer = window.setTimeout(async () => {
+      try {
+        if (!sessionToken.current) sessionToken.current = new library.AutocompleteSessionToken()
+        const { suggestions } = await library.AutocompleteSuggestion.fetchAutocompleteSuggestions({
+          input,
+          locationRestriction: THAILAND_BOUNDS,
+          origin: { lat: 13.7563, lng: 100.5018 },
+          language: 'th',
+          region: 'th',
+          sessionToken: sessionToken.current,
+        })
+        if (requestId !== newestRequest.current) return
+        const remote = (suggestions as any[])
+          .map((suggestion: any): PlaceOption | null => {
+            const prediction = suggestion.placePrediction
+            if (!prediction) return null
+            return {
+              id: prediction.placeId,
+              label: prediction.mainText?.toString() ?? prediction.text.toString(),
+              secondary: prediction.secondaryText?.toString(),
+              prediction,
+            }
+          })
+          .filter((option: PlaceOption | null): option is PlaceOption => Boolean(option))
+        const remoteIds = new Set(remote.map((option) => option.id))
+        setOptions([...remote, ...local.filter((option) => !remoteIds.has(option.id))].slice(0, 6))
+        setPlacesUnavailable(false)
+      } catch {
+        if (requestId !== newestRequest.current) return
+        setOptions(local)
+        setPlacesUnavailable(true)
+      } finally {
+        if (requestId === newestRequest.current) setLoading(false)
+      }
+    }, 300)
+
+    return () => window.clearTimeout(timer)
+  }, [open, query])
+
+  const choose = async (option: PlaceOption) => {
+    if (option.location) {
+      onChange(option.location)
+      setQuery(option.location.shortName)
+      setOpen(false)
+      return
+    }
+
+    try {
+      setLoading(true)
+      const place = option.prediction?.toPlace()
+      if (!place) return
+      await place.fetchFields({ fields: ['id', 'displayName', 'formattedAddress', 'location'] })
+      const lat = coordinate(place.location?.lat)
+      const lng = coordinate(place.location?.lng)
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) throw new Error('Missing coordinates')
+      const selected: Location = {
+        name: place.formattedAddress ?? place.displayName ?? option.label,
+        shortName: place.displayName ?? option.label,
+        lat,
+        lng,
+        placeId: place.id ?? option.id,
+      }
+      onChange(selected)
+      setQuery(selected.shortName)
+      setOpen(false)
+      sessionToken.current = placesLibrary.current
+        ? new placesLibrary.current.AutocompleteSessionToken()
+        : null
+    } catch {
+      setPlacesUnavailable(true)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'ArrowDown') {
+      event.preventDefault()
+      setOpen(true)
+      setActiveIndex((current) => Math.min(current + 1, options.length - 1))
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault()
+      setActiveIndex((current) => Math.max(current - 1, 0))
+    } else if (event.key === 'Enter' && open && activeIndex >= 0) {
+      event.preventDefault()
+      void choose(options[activeIndex])
+    } else if (event.key === 'Escape') {
+      setOpen(false)
+      setQuery(value.shortName)
+    }
   }
 
   return (
-    <label className="block">
+    <label className="relative block">
       <span className="mb-2 block text-xs font-bold uppercase tracking-[0.12em] text-slate-500">{label}</span>
-      {!fallback && <div ref={mountRef} className="place-autocomplete-host min-h-12" />}
-      {fallback && <div className="relative">
-        <MapPin className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+      <div className="relative">
+        <MapPin className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
         <input
-          key={value.placeId}
-          defaultValue={value.shortName}
-          list={listId}
-          onChange={(event) => selectFallback(event.target.value)}
-          onBlur={(event) => {
-            selectFallback(event.target.value)
-            if (!LOCATIONS.some((location) => location.shortName.toLowerCase() === event.target.value.trim().toLowerCase())) {
-              event.target.value = value.shortName
-            }
-          }}
-          className="field pl-10"
+          value={query}
+          onFocus={() => { setOpen(true); setOptions(savedOptions(query)) }}
+          onChange={(event) => { setQuery(event.target.value); setOpen(true); setActiveIndex(-1) }}
+          onKeyDown={handleKeyDown}
+          onBlur={() => window.setTimeout(() => {
+            setOpen(false)
+            setQuery(value.shortName)
+          }, 150)}
+          className="field pl-10 pr-10"
           aria-label={label}
+          aria-autocomplete="list"
+          aria-expanded={open}
+          aria-controls={listId}
+          autoComplete="off"
         />
-        <datalist id={listId}>
-          {LOCATIONS.map((location) => <option value={location.shortName} key={location.placeId} />)}
-        </datalist>
-        <p className="mt-1.5 text-[10px] font-semibold text-amber-700">Google Places unavailable — using saved Bangkok locations.</p>
+        {loading && <LoaderCircle className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-along-600" />}
+      </div>
+
+      {open && (options.length > 0 || placesUnavailable) && <div id={listId} role="listbox" className="absolute left-0 right-0 top-full z-[70] mt-2 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+        {options.map((option, index) => <button
+          key={`${option.id}-${option.label}`}
+          type="button"
+          role="option"
+          aria-selected={activeIndex === index}
+          onMouseDown={(event) => event.preventDefault()}
+          onMouseEnter={() => setActiveIndex(index)}
+          onClick={() => void choose(option)}
+          className={`flex w-full items-start gap-3 border-b border-slate-100 px-4 py-3 text-left transition last:border-0 ${activeIndex === index ? 'bg-along-50' : 'hover:bg-slate-50'}`}
+        >
+          <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-along-600" />
+          <span className="min-w-0"><strong className="block truncate text-sm text-ink">{option.label}</strong>{option.secondary && option.secondary !== option.label && <span className="mt-0.5 block truncate text-[11px] text-slate-500">{option.secondary}</span>}</span>
+        </button>)}
+        <div className="flex items-center justify-between bg-slate-50 px-4 py-2 text-[10px] font-semibold text-slate-400">
+          <span>{placesUnavailable ? 'Saved locations — Google Places unavailable' : 'Search results'}</span>
+          {!placesUnavailable && <span className="font-bold text-slate-500">Powered by Google</span>}
+        </div>
       </div>}
     </label>
   )
