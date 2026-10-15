@@ -20,6 +20,11 @@
   .nav-button { @apply inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-500 transition hover:bg-white hover:text-ink; }
   .nav-button-active { @apply bg-white text-ink shadow-sm; }
   .field { @apply h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-ink outline-none transition placeholder:text-slate-400 focus:border-along-500 focus:ring-4 focus:ring-along-50; }
+  .place-autocomplete-host gmp-place-autocomplete { @apply block w-full text-sm font-semibold text-ink; height: 3rem; color-scheme: light; }
+  .place-autocomplete-host gmp-place-autocomplete::part(input) { @apply h-12 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-ink outline-none transition; }
+  .place-autocomplete-host gmp-place-autocomplete::part(input):focus { @apply border-along-500 ring-4 ring-along-50; }
+  .place-autocomplete-host gmp-place-autocomplete::part(prediction-list) { @apply z-50 mt-1 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl; }
+  .place-autocomplete-host gmp-place-autocomplete::part(prediction-item) { @apply text-sm text-ink; }
   .eyebrow { @apply inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.17em] text-along-600; }
   .map-shell { min-height: clamp(360px, 58vh, 700px); }
 }

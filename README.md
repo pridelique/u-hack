@@ -37,7 +37,7 @@ The demo verification badges are simulated. No identity documents, licences, sel
 
 Copy `.env.example` to `.env.local` and set:
 
-- `VITE_GOOGLE_MAPS_API_KEY`: browser-restricted key with Maps JavaScript API and Places API enabled.
+- `VITE_GOOGLE_MAPS_API_KEY`: browser-restricted key with Maps JavaScript API and Places API (New) enabled.
 - `GOOGLE_ROUTES_API_KEY`: server-only key with Routes API enabled. Configure this in Vercel; never expose it as a `VITE_` variable.
 
 The browser key loads the map and Place Autocomplete. `api/routes.ts` proxies explicit route requests to Google Routes. Requests are session-cached, and cheap date/seat/safety/time/direction/corridor filters run before detailed detour calls.
