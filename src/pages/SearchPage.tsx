@@ -60,6 +60,8 @@ export function SearchPage({ user, trips, onNavigate, onTripUpdate }: { user: Us
   const toggleCompare = (tripId: string) => setCompareIds((current) => current.includes(tripId) ? current.filter((id) => id !== tripId) : current.length < 2 ? [...current, tripId] : current)
   const selected = matches.find((match) => match.trip.id === selectedId) ?? matches[0] ?? null
   const compared = compareIds.map((id) => matches.find((match) => match.trip.id === id)).filter((item): item is MatchResult => Boolean(item))
+  const mapMatch = compared.length === 2 ? compared[0] : selected
+  const mapComparison = compared.length === 2 ? compared[1] : null
 
   const confirmBooking = async () => {
     if (!booking) return
@@ -99,7 +101,7 @@ export function SearchPage({ user, trips, onNavigate, onTripUpdate }: { user: Us
         </div>
 
         <aside className="xl:sticky xl:top-24 xl:self-start">
-          <MapPanel origin={search.origin} destination={search.destination} match={selected} secondaryMatch={compared.length === 2 ? compared[1] : null} title={selected ? `${selected.driver.name}'s route match` : 'Your search area'} />
+          <MapPanel origin={search.origin} destination={search.destination} match={mapMatch} secondaryMatch={mapComparison} title={mapComparison ? 'Compared pickup routes' : mapMatch ? `${mapMatch.driver.name}'s route match` : 'Your search area'} />
           {selected ? <div className="mt-4 grid gap-3 sm:grid-cols-3"><MapMetric color="bg-mint-500" label="Shared route" value={`${selected.routeOverlapPercent}%`} /><MapMetric color="bg-ember-500" label="Extra time" value={`+${selected.detourMinutes} min`} /><MapMetric color="bg-along-500" label="Overall fit" value={`${selected.compatibilityScore}% match`} /></div> : <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-5 text-sm leading-6 text-slate-500"><strong className="text-ink">How matching works:</strong> we check direction, timing, available seats, pickup time, and the driver’s maximum detour.</div>}
           {compareIds.length === 1 && <div className="mt-4 flex items-center gap-3 rounded-2xl border border-along-100 bg-along-50 p-4 text-sm text-along-700"><CheckCircle2 className="h-5 w-5 shrink-0" /><p><strong>One ride selected.</strong> Choose one more to compare side by side.</p></div>}
         </aside>

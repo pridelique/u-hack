@@ -50,7 +50,7 @@ export function PublishPage({ user, trips, onNavigate, onPublished, onTripsCompl
       setActiveRouteLoading(false)
       return
     }
-    if (activeTrip.route?.source === 'google') {
+    if (activeTrip.route?.source === 'longdo') {
       setActiveRoute(activeTrip.route)
       setActiveRouteLoading(false)
       return

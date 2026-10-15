@@ -28,9 +28,13 @@ export interface User {
 export interface RouteSummary {
   distanceMeters: number
   durationSeconds: number
-  encodedPolyline?: string
   path: Array<{ lat: number; lng: number }>
-  source: 'google' | 'estimate'
+  legs?: Array<{
+    distanceMeters: number
+    durationSeconds: number
+    path: Array<{ lat: number; lng: number }>
+  }>
+  source: 'longdo' | 'estimate'
 }
 
 export interface Trip {
@@ -80,6 +84,8 @@ export interface SearchInput {
 export interface MatchResult {
   driver: User
   trip: Trip
+  pickup: Location
+  dropoff: Location
   compatibilityScore: number
   routeOverlapPercent: number
   detourMinutes: number
@@ -91,5 +97,5 @@ export interface MatchResult {
   originalRoute: RouteSummary
   modifiedRoute: RouteSummary
   passengerRoute: RouteSummary
-  estimateSource: 'google' | 'demo'
+  estimateSource: 'longdo' | 'demo'
 }

@@ -73,7 +73,7 @@ export default function App() {
             <button onClick={() => navigate('search')} className={`nav-button ${page === 'search' ? 'nav-button-active' : ''}`}><Search className="h-4 w-4" />Passenger</button>
             <button onClick={() => navigate('publish')} className={`nav-button ${page === 'publish' ? 'nav-button-active' : ''}`}><CarFront className="h-4 w-4" />Driver</button>
           </nav>
-          <div className="hidden xl:block"><StatusPill storageMode={storageMode} routingMode={isLiveRoutingConfigured() ? 'google' : 'demo'} /></div>
+          <div className="hidden xl:block"><StatusPill storageMode={storageMode} routingMode={isLiveRoutingConfigured() ? 'longdo' : 'demo'} /></div>
           <div className="hidden md:block"><DemoBar user={user} users={demoUsers} onUserChange={changeUser} onReset={handleReset} /></div>
           <div className="ml-auto flex gap-2 sm:hidden"><button onClick={() => navigate('search')} className="icon-button" aria-label="Passenger mode"><Search className="h-5 w-5" /></button><button onClick={() => navigate('publish')} className="icon-button" aria-label="Driver mode"><CarFront className="h-5 w-5" /></button></div>
         </div>

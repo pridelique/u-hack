@@ -43,25 +43,33 @@ npm run preview
 
 ## Demo mode
 
-Demo mode is deliberately resilient for judging. It supplies seeded users, driver-specific drafts, route geometry, match metrics, booking state, and seat updates from browser storage. Drafts never appear in passenger search until the corresponding driver publishes. If Google routing or Firebase is unavailable, the UI labels the result **Using demo route estimates** and shows a route diagram rather than a broken map.
+Demo mode is deliberately resilient for judging. It supplies seeded users, driver-specific drafts, route geometry, match metrics, booking state, and seat updates from browser storage. Drafts never appear in passenger search until the corresponding driver publishes. If Longdo routing or Firebase is unavailable, the UI labels the result **Using demo route estimates** and shows a route diagram rather than a broken map.
 
 The demo verification badges are simulated. No identity documents, licences, selfies, biometrics, or private home addresses are collected.
 
-## Google Maps and Routes
+## Longdo Map, Search, and Routes
 
 Copy `.env.example` to `.env.local` and set:
 
-- `VITE_GOOGLE_MAPS_API_KEY`: browser-restricted key with Maps JavaScript API and Places API (New) enabled.
-- `GOOGLE_ROUTES_API_KEY`: server-only key with Routes API enabled. Configure this in Vercel; never expose it as a `VITE_` variable.
+- `VITE_LONGDO_MAP_API_KEY`: the single domain-restricted key used for Longdo Map API v3, Search, and Route.
 
-The browser key loads the map and Place Autocomplete. `api/routes.ts` proxies explicit route requests to Google Routes. Requests are session-cached, and cheap date/seat/safety/time/direction/corridor filters run before detailed detour calls.
+The key is tied to registered website URLs. The proxies forward the validated page origin/referrer so the same key works for the browser map and server-side requests. Register both the local URL and every deployed domain in Longdo's key settings.
+
+`api/places.ts` proxies debounced Longdo Search requests and `api/routes.ts` proxies traffic-aware Longdo Route GeoJSON requests. The browser caches complete routes for the session, while the server caches route legs and place searches for short periods. Multi-stop detours reuse their first route leg for pickup-time calculation instead of requesting it twice. Cheap date, seat, safety, time, direction, and corridor filters run first, and detailed road calculations are capped at three candidates per search to protect the free-tier quota.
 
 ## Firebase
 
-Create a Firebase web app, enable Firestore and Anonymous Authentication, then fill the four `VITE_FIREBASE_*` values in `.env.local`. Deploy `firestore.rules` with the Firebase CLI. On startup, Along signs in anonymously and uses the three collections described by the brief: `users`, `trips`, and `bookings`.
+Create a Firebase web app, enable Firestore and Anonymous Authentication, then fill the `VITE_FIREBASE_*` values in `.env.local`. Deploy `firestore.rules` with the Firebase CLI or Firebase Console. On startup, Along signs in anonymously and uses the three collections described by the brief: `users`, `trips`, and `bookings`.
 
 An empty Firestore project is seeded automatically with demo users and non-searchable trip drafts. **Reset demo** restores those drafts, completes active test trips, and starts a fresh demo booking session even if older deployed rules keep booking history. Booking uses one deterministic active-booking record per passenger/session and a Firestore transaction to prevent a second active ride, verify capacity, decrement `availableSeats`, mark a zero-seat trip `full`, and create the booking. Ending a driver trip also completes its confirmed bookings and releases those passengers to book again. Production would remove demo sessions and enforce this rule per authenticated passenger with stronger authorization rules.
 
 ## Deployment
 
-The repo is Vercel-ready. Add the environment variables in the Vercel project and deploy normally. Without them, the deployed app remains fully demonstrable in browser-local demo mode.
+The repo is Vercel-ready. Before deploying:
+
+1. Add `VITE_LONGDO_MAP_API_KEY` and all `VITE_FIREBASE_*` values from `.env.example` to the Vercel project for the Production environment.
+2. Register the production domain in the Longdo key settings. Register Preview domains too if they need live maps.
+3. Enable Firebase Anonymous Authentication and publish `firestore.rules`.
+4. Redeploy after changing any `VITE_*` variable because Vite embeds those values during the build.
+
+Without live-service variables, the deployed app remains demonstrable with browser-local storage and route estimates.

@@ -1,7 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { LoaderCircle, MapPin } from 'lucide-react'
 import { LOCATIONS } from '../data/locations'
-import { loadGoogleMaps } from '../services/googleMaps'
 import type { Location } from '../types'
 
 interface Props {
@@ -14,15 +13,8 @@ type PlaceOption = {
   id: string
   label: string
   secondary?: string
-  location?: Location
-  prediction?: any
+  location: Location
 }
-
-const THAILAND_BOUNDS = { west: 97.3, south: 5.6, east: 105.7, north: 20.5 }
-
-const coordinate = (value: unknown) => (
-  typeof value === 'function' ? Number(value()) : Number(value)
-)
 
 const savedOptions = (query: string): PlaceOption[] => {
   const normalized = query.trim().toLowerCase()
@@ -41,8 +33,6 @@ const savedOptions = (query: string): PlaceOption[] => {
 
 export function LocationInput({ label, value, onChange }: Props) {
   const listId = useId()
-  const placesLibrary = useRef<any>(null)
-  const sessionToken = useRef<any>(null)
   const newestRequest = useRef(0)
   const [query, setQuery] = useState(value.shortName)
   const [options, setOptions] = useState<PlaceOption[]>([])
@@ -54,106 +44,58 @@ export function LocationInput({ label, value, onChange }: Props) {
   useEffect(() => { setQuery(value.shortName) }, [value.placeId, value.shortName])
 
   useEffect(() => {
-    let cancelled = false
-    loadGoogleMaps()
-      .then(() => window.google?.maps?.importLibrary('places'))
-      .then((library: any) => {
-        if (cancelled || !library?.AutocompleteSuggestion) return
-        placesLibrary.current = library
-        sessionToken.current = new library.AutocompleteSessionToken()
-        setPlacesUnavailable(false)
-      })
-      .catch(() => { if (!cancelled) setPlacesUnavailable(true) })
-    return () => { cancelled = true }
-  }, [])
-
-  useEffect(() => {
     if (!open) return
     const local = savedOptions(query)
     const input = query.trim()
-    const library = placesLibrary.current
 
-    if (input.length < 2 || !library) {
+    if (input.length < 2) {
       setOptions(local)
       setLoading(false)
       return
     }
 
     const requestId = ++newestRequest.current
+    const controller = new AbortController()
     setLoading(true)
     const timer = window.setTimeout(async () => {
       try {
-        if (!sessionToken.current) sessionToken.current = new library.AutocompleteSessionToken()
-        const { suggestions } = await library.AutocompleteSuggestion.fetchAutocompleteSuggestions({
-          input,
-          locationRestriction: THAILAND_BOUNDS,
-          origin: { lat: 13.7563, lng: 100.5018 },
-          language: 'th',
-          region: 'th',
-          sessionToken: sessionToken.current,
+        const response = await fetch('/api/places', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: input }),
+          signal: controller.signal,
         })
+        if (!response.ok) throw new Error('Longdo place search is unavailable')
+        const payload = await response.json() as { places?: PlaceOption[] }
         if (requestId !== newestRequest.current) return
-        const remote = (suggestions as any[])
-          .map((suggestion: any): PlaceOption | null => {
-            const prediction = suggestion.placePrediction
-            if (!prediction) return null
-            return {
-              id: prediction.placeId,
-              label: prediction.mainText?.toString() ?? prediction.text.toString(),
-              secondary: prediction.secondaryText?.toString(),
-              prediction,
-            }
-          })
-          .filter((option: PlaceOption | null): option is PlaceOption => Boolean(option))
+        const remote = (payload.places ?? []).filter((option) => (
+          option?.location
+          && Number.isFinite(option.location.lat)
+          && Number.isFinite(option.location.lng)
+        ))
         const remoteIds = new Set(remote.map((option) => option.id))
         setOptions([...remote, ...local.filter((option) => !remoteIds.has(option.id))].slice(0, 6))
         setPlacesUnavailable(false)
       } catch {
-        if (requestId !== newestRequest.current) return
+        if (controller.signal.aborted || requestId !== newestRequest.current) return
         setOptions(local)
         setPlacesUnavailable(true)
       } finally {
         if (requestId === newestRequest.current) setLoading(false)
       }
-    }, 300)
+    }, 350)
 
-    return () => window.clearTimeout(timer)
+    return () => {
+      window.clearTimeout(timer)
+      controller.abort()
+    }
   }, [open, query])
 
-  const choose = async (option: PlaceOption) => {
-    if (option.location) {
-      onChange(option.location)
-      setQuery(option.location.shortName)
-      setOpen(false)
-      return
-    }
-
-    try {
-      setLoading(true)
-      const place = option.prediction?.toPlace()
-      if (!place) return
-      await place.fetchFields({ fields: ['id', 'displayName', 'formattedAddress', 'location'] })
-      const lat = coordinate(place.location?.lat)
-      const lng = coordinate(place.location?.lng)
-      if (!Number.isFinite(lat) || !Number.isFinite(lng)) throw new Error('Missing coordinates')
-      const selected: Location = {
-        name: place.formattedAddress ?? place.displayName ?? option.label,
-        shortName: place.displayName ?? option.label,
-        lat,
-        lng,
-        placeId: place.id ?? option.id,
-      }
-      onChange(selected)
-      setQuery(selected.shortName)
-      setOpen(false)
-      sessionToken.current = placesLibrary.current
-        ? new placesLibrary.current.AutocompleteSessionToken()
-        : null
-    } catch {
-      setPlacesUnavailable(true)
-    } finally {
-      setLoading(false)
-    }
+  const choose = (option: PlaceOption) => {
+    onChange(option.location)
+    setQuery(option.location.shortName)
+    setOpen(false)
+    setActiveIndex(-1)
   }
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -166,7 +108,7 @@ export function LocationInput({ label, value, onChange }: Props) {
       setActiveIndex((current) => Math.max(current - 1, 0))
     } else if (event.key === 'Enter' && open && activeIndex >= 0) {
       event.preventDefault()
-      void choose(options[activeIndex])
+      choose(options[activeIndex])
     } else if (event.key === 'Escape') {
       setOpen(false)
       setQuery(value.shortName)
@@ -205,15 +147,15 @@ export function LocationInput({ label, value, onChange }: Props) {
           aria-selected={activeIndex === index}
           onMouseDown={(event) => event.preventDefault()}
           onMouseEnter={() => setActiveIndex(index)}
-          onClick={() => void choose(option)}
+          onClick={() => choose(option)}
           className={`flex w-full items-start gap-3 border-b border-slate-100 px-4 py-3 text-left transition last:border-0 ${activeIndex === index ? 'bg-along-50' : 'hover:bg-slate-50'}`}
         >
           <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-along-600" />
           <span className="min-w-0"><strong className="block truncate text-sm text-ink">{option.label}</strong>{option.secondary && option.secondary !== option.label && <span className="mt-0.5 block truncate text-[11px] text-slate-500">{option.secondary}</span>}</span>
         </button>)}
         <div className="flex items-center justify-between bg-slate-50 px-4 py-2 text-[10px] font-semibold text-slate-400">
-          <span>{placesUnavailable ? 'Saved locations — Google Places unavailable' : 'Search results'}</span>
-          {!placesUnavailable && <span className="font-bold text-slate-500">Powered by Google</span>}
+          <span>{placesUnavailable ? 'Saved locations — Longdo Search unavailable' : 'Search results'}</span>
+          {!placesUnavailable && <span className="font-bold text-slate-500">Powered by Longdo</span>}
         </div>
       </div>}
     </label>
