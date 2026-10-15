@@ -18,7 +18,9 @@ export const findMatches = async (trips: Trip[], users: User[], search: SearchIn
   const matches = await Promise.all(candidates.map(async (trip): Promise<MatchResult | null> => {
     const driver = users.find((user) => user.id === trip.driverId)
     if (!driver) return null
-    const originalRoute = trip.route ?? await calculateRoute([trip.origin, trip.destination])
+    const originalRoute = trip.route?.source === 'google'
+      ? trip.route
+      : await calculateRoute([trip.origin, trip.destination])
     const modifiedRoute = await calculateRoute([trip.origin, search.origin, search.destination, trip.destination])
     const liveDetour = Math.max(0, Math.round((modifiedRoute.durationSeconds - originalRoute.durationSeconds) / 60))
     const preset = demoMetrics[trip.id]
