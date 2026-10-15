@@ -19,7 +19,7 @@ export function BookingModal({ match, search, state, error, onClose, onConfirm }
           <div className="py-6 text-center">
             <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-mint-50 text-mint-600"><CheckCircle2 className="h-8 w-8" /></div>
             <h2 className="mt-5 text-2xl font-black tracking-[-0.03em] text-ink">Ride booked.</h2>
-            <p className="mt-2 text-sm leading-relaxed text-slate-500">You’re going with {match.driver.name}. Their remaining seat count has been updated.</p>
+            <p className="mt-2 text-sm leading-relaxed text-slate-500">You’re going with {match.driver.name} — this ride now has {match.availableSeats} {match.availableSeats === 1 ? 'seat' : 'seats'} left.</p>
             <button onClick={onClose} className="btn-primary mt-6 w-full">Back to matches <ArrowRight className="h-4 w-4" /></button>
           </div>
         ) : <>
@@ -29,10 +29,12 @@ export function BookingModal({ match, search, state, error, onClose, onConfirm }
             <Detail icon={MapPin} label="Pickup" value={search.origin.shortName} />
             <Detail icon={Clock3} label="Estimated pickup" value={`~${formatTime(match.estimatedPickupTime)}`} />
             <Detail icon={MapPin} label="Drop-off" value={search.destination.shortName} />
-            <div className="grid grid-cols-2 gap-3"><Detail icon={Users} label="Seats" value="1" compact /><Detail icon={Route} label="Driver detour" value={`+${match.detourMinutes} min`} compact /></div>
+            <div className="grid grid-cols-2 gap-3"><Detail icon={Users} label="You are booking" value="1 seat" compact /><Detail icon={Users} label="Available now" value={`${match.availableSeats} ${match.availableSeats === 1 ? 'seat' : 'seats'} left`} compact /></div>
+            <Detail icon={Route} label="Driver detour" value={`+${match.detourMinutes} min`} />
           </div>
+          {match.availableSeats < 1 && <p className="mt-4 rounded-xl bg-amber-50 p-3 text-sm font-semibold text-amber-800">This ride just became full. Close this window and choose another driver.</p>}
           {error && <p className="mt-4 rounded-xl bg-red-50 p-3 text-sm font-semibold text-red-700">{error}</p>}
-          <button onClick={onConfirm} disabled={state === 'booking'} className="btn-primary mt-6 w-full">{state === 'booking' ? <><LoaderCircle className="h-4 w-4 animate-spin" />Booking…</> : <>Confirm booking <ArrowRight className="h-4 w-4" /></>}</button>
+          <button onClick={onConfirm} disabled={state === 'booking' || match.availableSeats < 1} className="btn-primary mt-6 w-full">{state === 'booking' ? <><LoaderCircle className="h-4 w-4 animate-spin" />Booking…</> : match.availableSeats < 1 ? 'No seats left' : <>Confirm booking <ArrowRight className="h-4 w-4" /></>}</button>
           <p className="mt-3 text-center text-[11px] text-slate-400">No payment required for this prototype.</p>
         </>}
       </div>

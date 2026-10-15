@@ -8,12 +8,14 @@ interface Props {
   selected: boolean
   compared: boolean
   compareDisabled: boolean
+  bookingDisabled: boolean
+  booked: boolean
   onSelect: () => void
   onToggleCompare: () => void
   onBook: () => void
 }
 
-export function MatchCard({ match, selected, compared, compareDisabled, onSelect, onToggleCompare, onBook }: Props) {
+export function MatchCard({ match, selected, compared, compareDisabled, bookingDisabled, booked, onSelect, onToggleCompare, onBook }: Props) {
   return (
     <article className={`rounded-[24px] border bg-white p-5 transition ${selected ? 'border-along-500 shadow-card ring-2 ring-along-100' : 'border-slate-200 hover:border-slate-300'}`}>
       <div className="flex items-start justify-between gap-4">
@@ -50,7 +52,7 @@ export function MatchCard({ match, selected, compared, compareDisabled, onSelect
         <button onClick={onToggleCompare} disabled={compareDisabled && !compared} className={`btn-secondary flex-1 px-3 ${compared ? 'border-along-500 bg-along-50 text-along-700' : ''}`}>
           {compared ? <Check className="h-4 w-4" /> : <GitCompareArrows className="h-4 w-4" />}{compared ? 'Selected' : 'Compare'}
         </button>
-        <button onClick={onBook} className="btn-primary flex-1 px-3">Book <ArrowRight className="h-4 w-4" /></button>
+        <button onClick={onBook} disabled={bookingDisabled} className="btn-primary flex-1 px-3">{booked ? 'Booked' : bookingDisabled ? 'Active ride' : <>Book <ArrowRight className="h-4 w-4" /></>}</button>
       </div>
     </article>
   )

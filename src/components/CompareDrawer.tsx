@@ -2,7 +2,7 @@ import { ArrowRight, Check, Clock3, Route, Sparkles, Users, X } from 'lucide-rea
 import type { MatchResult } from '../types'
 import { formatTime } from '../utils/time'
 
-export function CompareDrawer({ matches, onClose, onBook }: { matches: [MatchResult, MatchResult]; onClose: () => void; onBook: (match: MatchResult) => void }) {
+export function CompareDrawer({ matches, activeBookingTripId, onClose, onBook }: { matches: [MatchResult, MatchResult]; activeBookingTripId: string | null; onClose: () => void; onBook: (match: MatchResult) => void }) {
   const [first, second] = matches
   const recommended = first.compatibilityScore >= second.compatibilityScore ? first : second
   const other = recommended === first ? second : first
@@ -27,7 +27,7 @@ export function CompareDrawer({ matches, onClose, onBook }: { matches: [MatchRes
           <ComparisonRow label="Pickup" icon={Clock3} values={[formatTime(first.estimatedPickupTime), formatTime(second.estimatedPickupTime)]} />
           <ComparisonRow label="Seats" icon={Users} values={[String(first.availableSeats), String(second.availableSeats)]} />
           <div className="border-t border-slate-200 p-3 text-xs font-bold text-slate-500">Choose</div>
-          {[first, second].map((match) => <div key={match.trip.id} className="border-l border-t border-slate-200 p-3"><button onClick={() => onBook(match)} className={match === recommended ? 'btn-primary w-full px-3' : 'btn-secondary w-full px-3'}>Book <ArrowRight className="h-4 w-4" /></button></div>)}
+          {[first, second].map((match) => <div key={match.trip.id} className="border-l border-t border-slate-200 p-3"><button onClick={() => onBook(match)} disabled={Boolean(activeBookingTripId)} className={match === recommended ? 'btn-primary w-full px-3' : 'btn-secondary w-full px-3'}>{activeBookingTripId === match.trip.id ? 'Booked' : activeBookingTripId ? 'Active ride' : <>Book <ArrowRight className="h-4 w-4" /></>}</button></div>)}
         </div>
 
         <div className="mt-5 flex gap-3 rounded-2xl bg-along-50 p-4 text-sm leading-relaxed text-along-700"><Sparkles className="mt-0.5 h-5 w-5 shrink-0" /><p><strong>{recommended.driver.name} is recommended</strong> because this ride {reason}.</p></div>

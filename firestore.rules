@@ -11,8 +11,7 @@ service cloud.firestore {
       allow delete: if false;
     }
     match /bookings/{bookingId} {
-      allow read, create: if signedIn();
-      allow update, delete: if false;
+      allow read, create, update, delete: if signedIn();
     }
   }
 }

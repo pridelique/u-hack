@@ -1,5 +1,5 @@
 export type Gender = 'female' | 'male' | 'unknown'
-export type TripStatus = 'upcoming' | 'full' | 'cancelled' | 'completed'
+export type TripStatus = 'draft' | 'upcoming' | 'full' | 'cancelled' | 'completed'
 export type AppPage = 'home' | 'publish' | 'search'
 
 export interface Location {
@@ -46,6 +46,7 @@ export interface Trip {
   baselineDurationSeconds: number
   status: TripStatus
   createdAt: string
+  isDemoSeed?: boolean
   route?: RouteSummary
 }
 
@@ -63,8 +64,9 @@ export interface Booking {
   routeOverlapPercent: number
   compatibilityScore: number
   requestedSeats: number
-  status: 'confirmed' | 'cancelled'
+  status: 'confirmed' | 'cancelled' | 'completed'
   createdAt: string
+  demoSessionId?: string
 }
 
 export interface SearchInput {

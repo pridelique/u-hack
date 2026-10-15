@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { MapPin, Navigation, Route } from 'lucide-react'
 import type { Location, MatchResult, RouteSummary } from '../types'
-import { loadGoogleMaps } from '../services/googleMaps'
+import { googleMapsErrorEvent, loadGoogleMaps } from '../services/googleMaps'
 
 interface Props {
   origin?: Location
@@ -32,7 +32,7 @@ const routePath = (route?: RouteSummary) => route?.encodedPolyline ? decodePolyl
 export function MapPanel({ origin, destination, route, match, secondaryMatch, title = 'Route preview' }: Props) {
   const mapRef = useRef<HTMLDivElement>(null)
   const [mapReady, setMapReady] = useState(false)
-  const [mapFailed, setMapFailed] = useState(!import.meta.env.VITE_GOOGLE_MAPS_API_KEY)
+  const [mapFailed, setMapFailed] = useState(!import.meta.env.VITE_GOOGLE_MAPS_API_KEY || Boolean(window.__alongGoogleMapsFailed))
   const paths = useMemo(() => {
     if (match) return [
       { path: routePath(match.originalRoute), color: '#1677FF', label: `${match.driver.name}'s route` },
@@ -45,6 +45,12 @@ export function MapPanel({ origin, destination, route, match, secondaryMatch, ti
 
   useEffect(() => {
     let cancelled = false
+    const handleMapsError = () => {
+      if (cancelled) return
+      setMapReady(false)
+      setMapFailed(true)
+    }
+    window.addEventListener(googleMapsErrorEvent, handleMapsError)
     loadGoogleMaps().then(() => {
       if (cancelled || !mapRef.current || !window.google?.maps) return
       const points = paths.flatMap((item) => item.path)
@@ -70,7 +76,10 @@ export function MapPanel({ origin, destination, route, match, secondaryMatch, ti
       if (!bounds.isEmpty()) map.fitBounds(bounds, 56)
       setMapReady(true)
     }).catch(() => setMapFailed(true))
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+      window.removeEventListener(googleMapsErrorEvent, handleMapsError)
+    }
   }, [destination, match, origin, paths])
 
   if (!mapFailed) return (

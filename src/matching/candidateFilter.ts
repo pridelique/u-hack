@@ -4,7 +4,7 @@ import { toMinutes } from '../utils/time'
 
 export const filterCandidates = (trips: Trip[], users: User[], search: SearchInput) => trips.filter((trip) => {
   const driver = users.find((user) => user.id === trip.driverId)
-  if (!driver?.driverVerified || trip.status !== 'upcoming' || trip.availableSeats < 1) return false
+  if (!driver?.driverVerified || trip.isDemoSeed || trip.status !== 'upcoming' || trip.availableSeats < 1) return false
   if (trip.departureTime.slice(0, 10) !== search.date) return false
   if (search.womenOnly && driver.gender !== 'female') return false
   if (Math.abs(toMinutes(trip.departureTime) - toMinutes(`${search.date}T${search.preferredTime}:00`)) > 45) return false
