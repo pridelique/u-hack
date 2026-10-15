@@ -80,15 +80,15 @@ export function SearchPage({ user, trips, onNavigate, onTripUpdate }: { user: Us
   }
 
   return (
-    <main className="mx-auto max-w-[1500px] px-4 py-6 sm:px-6 lg:px-8">
+    <main className="page-container">
       <button onClick={() => onNavigate('home')} className="inline-flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-ink"><ArrowLeft className="h-4 w-4" />Back</button>
       <div className="mt-4"><ModeGuide mode="passenger" /></div>
-      <div className="mt-4 grid gap-5 xl:grid-cols-[500px_1fr]">
-        <div className="space-y-4">
-          <section className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-card sm:p-6">
-            <div className="flex items-start justify-between gap-4"><div><span className="eyebrow">Step 1 · Your journey</span><h1 className="mt-3 text-3xl font-black tracking-[-0.04em] text-ink">Where do you need to go?</h1><p className="mt-2 text-sm leading-6 text-slate-500">We’ll find verified drivers whose existing trip already fits yours.</p></div><div className="hidden h-12 w-12 place-items-center rounded-2xl bg-along-50 text-along-600 sm:grid"><Search className="h-5 w-5" /></div></div>
-            <div className="mt-6 grid gap-4 sm:grid-cols-2"><LocationInput label="Pickup area" value={search.origin} onChange={(origin) => setSearch({ ...search, origin })} /><LocationInput label="Destination" value={search.destination} onChange={(destination) => setSearch({ ...search, destination })} /></div>
-            <div className="mt-4 grid grid-cols-2 gap-3"><label><span className="mb-2 block text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Date</span><input type="date" min={todayISO()} value={search.date} onChange={(event) => setSearch({ ...search, date: event.target.value })} className="field" /></label><label><span className="mb-2 block text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Preferred time</span><input type="time" value={search.preferredTime} onChange={(event) => setSearch({ ...search, preferredTime: event.target.value })} className="field" /></label></div>
+      <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,440px)_minmax(0,1fr)] xl:gap-8">
+        <div className="min-w-0 space-y-6">
+          <section className="form-panel">
+            <div><span className="eyebrow">Step 1 · Your journey</span><h1 className="mt-3 text-[28px] font-semibold leading-tight tracking-[-0.04em] text-ink sm:text-[32px]">Where do you need to go?</h1><p className="mt-3 text-sm leading-6 text-slate-500">We’ll find verified drivers whose existing trip already fits yours.</p></div>
+            <div className="mt-6 grid gap-4"><LocationInput label="Pickup area" value={search.origin} onChange={(origin) => setSearch({ ...search, origin })} /><LocationInput label="Destination" value={search.destination} onChange={(destination) => setSearch({ ...search, destination })} /></div>
+            <div className="date-time-row mt-4 grid grid-cols-2 gap-3"><label><span className="mb-2 block text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Date</span><input type="date" min={todayISO()} value={search.date} onChange={(event) => setSearch({ ...search, date: event.target.value })} className="field" /></label><label><span className="mb-2 block text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Preferred time</span><input type="time" value={search.preferredTime} onChange={(event) => setSearch({ ...search, preferredTime: event.target.value })} className="field" /></label></div>
             <div className="mt-5"><div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-slate-500"><ShieldCheck className="h-4 w-4" />Driver preference</div><div className="grid grid-cols-2 gap-2 rounded-2xl bg-slate-100 p-1.5"><PreferenceButton active={!search.womenOnly} onClick={() => setSearch({ ...search, womenOnly: false })}>Any verified driver</PreferenceButton><PreferenceButton active={search.womenOnly} onClick={() => setSearch({ ...search, womenOnly: true })}>Women drivers only</PreferenceButton></div></div>
             <button onClick={handleSearch} disabled={searching} className="btn-primary mt-6 w-full py-3.5">{searching ? <><LoaderCircle className="h-4 w-4 animate-spin" />Checking real routes…</> : <><Search className="h-4 w-4" />Search matching drivers</>}</button>
           </section>
@@ -100,9 +100,9 @@ export function SearchPage({ user, trips, onNavigate, onTripUpdate }: { user: Us
           </section>}
         </div>
 
-        <aside className="xl:sticky xl:top-24 xl:self-start">
+        <aside className="journey-map min-w-0">
           <MapPanel origin={search.origin} destination={search.destination} match={mapMatch} secondaryMatch={mapComparison} title={mapComparison ? 'Compared pickup routes' : mapMatch ? `${mapMatch.driver.name}'s route match` : 'Your search area'} />
-          {selected ? <div className="mt-4 grid gap-3 sm:grid-cols-3"><MapMetric color="bg-mint-500" label="Shared route" value={`${selected.routeOverlapPercent}%`} /><MapMetric color="bg-ember-500" label="Extra time" value={`+${selected.detourMinutes} min`} /><MapMetric color="bg-along-500" label="Overall fit" value={`${selected.compatibilityScore}% match`} /></div> : <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-5 text-sm leading-6 text-slate-500"><strong className="text-ink">How matching works:</strong> we check direction, timing, available seats, pickup time, and the driver’s maximum detour.</div>}
+          {selected ? <div className="mt-4 grid grid-cols-3 gap-2 sm:gap-3"><MapMetric color="bg-mint-500" label="Shared route" value={`${selected.routeOverlapPercent}%`} /><MapMetric color="bg-ember-500" label="Extra time" value={`+${selected.detourMinutes} min`} /><MapMetric color="bg-along-500" label="Overall fit" value={`${selected.compatibilityScore}% match`} /></div> : <div className="map-context mt-5"><strong className="font-medium text-ink">How matching works:</strong> we check direction, timing, available seats, pickup time, and the driver’s maximum detour.</div>}
           {compareIds.length === 1 && <div className="mt-4 flex items-center gap-3 rounded-2xl border border-along-100 bg-along-50 p-4 text-sm text-along-700"><CheckCircle2 className="h-5 w-5 shrink-0" /><p><strong>One ride selected.</strong> Choose one more to compare side by side.</p></div>}
         </aside>
       </div>
@@ -113,5 +113,5 @@ export function SearchPage({ user, trips, onNavigate, onTripUpdate }: { user: Us
   )
 }
 
-function PreferenceButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) { return <button type="button" onClick={onClick} className={`rounded-xl px-3 py-2.5 text-xs font-extrabold transition ${active ? 'bg-white text-ink shadow-sm' : 'text-slate-500 hover:text-ink'}`}>{children}</button> }
-function MapMetric({ color, label, value }: { color: string; label: string; value: string }) { return <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4"><span className={`h-9 w-1.5 rounded-full ${color}`} /><div><p className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">{label}</p><strong className="mt-0.5 block text-sm text-ink">{value}</strong></div></div> }
+function PreferenceButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) { return <button type="button" onClick={onClick} className={`min-h-11 rounded-lg px-3 py-2.5 text-xs font-semibold transition-colors ${active ? 'bg-white text-ink shadow-sm' : 'text-slate-500 hover:text-ink'}`}>{children}</button> }
+function MapMetric({ color, label, value }: { color: string; label: string; value: string }) { return <div className="min-w-0 border-t border-slate-200 px-1 py-3 sm:px-3"><span className={`mb-2 block h-0.5 w-6 ${color}`} /><p className="text-[10px] text-slate-500">{label}</p><strong className="mt-1 block text-sm font-semibold text-ink sm:text-lg">{value}</strong></div> }

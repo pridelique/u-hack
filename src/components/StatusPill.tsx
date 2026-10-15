@@ -12,7 +12,7 @@ export function StatusPill({ storageMode, routingMode }: { storageMode: 'firebas
         ? 'Firebase connected · demo routes'
         : 'Using demo route estimates'
   return (
-    <div className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold ${live ? 'border-mint-100 bg-mint-50 text-mint-600' : 'border-amber-200 bg-amber-50 text-amber-800'}`}>
+    <div className={`inline-flex items-center gap-2 text-[11px] font-medium ${live ? 'text-mint-600' : 'text-amber-800'}`}>
       <Icon className="h-3.5 w-3.5" />
       {label}
     </div>

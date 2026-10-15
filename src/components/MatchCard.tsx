@@ -17,16 +17,16 @@ interface Props {
 
 export function MatchCard({ match, selected, compared, compareDisabled, bookingDisabled, booked, onSelect, onToggleCompare, onBook }: Props) {
   return (
-    <article className={`rounded-[24px] border bg-white p-5 transition ${selected ? 'border-along-500 shadow-card ring-2 ring-along-100' : 'border-slate-200 hover:border-slate-300'}`}>
+    <article className={`rounded-2xl border bg-white p-5 transition-colors ${selected ? 'border-along-500 ring-1 ring-along-500' : 'border-slate-200 hover:border-slate-300'}`}>
       <div className="flex items-start justify-between gap-4">
         <div className="flex min-w-0 items-center gap-3">
-          <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl text-sm font-extrabold text-white" style={{ backgroundColor: match.driver.accent }}>{match.driver.initials}</div>
+          <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-sm font-semibold text-white" style={{ backgroundColor: match.driver.accent }}>{match.driver.initials}</div>
           <div className="min-w-0">
             <h3 className="truncate text-base font-extrabold text-ink">{match.driver.name}</h3>
             <p className="truncate text-xs text-slate-500">{match.driver.vehicleName} · {match.driver.vehiclePlateMasked}</p>
           </div>
         </div>
-        <div className="shrink-0 rounded-2xl bg-mint-50 px-3 py-2 text-right">
+        <div className="shrink-0 border-l border-slate-200 pl-3 text-right">
           <strong className="block text-xl font-black leading-none text-mint-600">{match.compatibilityScore}%</strong>
           <span className="text-[9px] font-black uppercase tracking-[0.16em] text-mint-600">match</span>
         </div>
@@ -41,7 +41,7 @@ export function MatchCard({ match, selected, compared, compareDisabled, bookingD
         </div>
       </button>
 
-      <div className="mt-5 grid grid-cols-2 gap-2">
+      <div className="mt-5 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-slate-100 pt-4">
         <Metric icon={Route} label="Route overlap" value={`${match.routeOverlapPercent}%`} accent="text-mint-600" />
         <Metric icon={Clock3} label="Driver detour" value={`+${match.detourMinutes} min`} accent="text-ember-600" />
         <Metric icon={Clock3} label="Est. pickup" value={formatTime(match.estimatedPickupTime)} />
@@ -59,5 +59,5 @@ export function MatchCard({ match, selected, compared, compareDisabled, bookingD
 }
 
 function Metric({ icon: Icon, label, value, accent = 'text-ink' }: { icon: typeof Route; label: string; value: string; accent?: string }) {
-  return <div className="rounded-2xl bg-slate-50 p-3"><div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400"><Icon className="h-3.5 w-3.5" />{label}</div><div className={`mt-1 text-sm font-extrabold ${accent}`}>{value}</div></div>
+  return <div className="min-w-0"><div className="flex items-center gap-1.5 text-[10px] text-slate-500"><Icon className="h-3.5 w-3.5" />{label}</div><div className={`mt-1 text-sm font-semibold ${accent}`}>{value}</div></div>
 }

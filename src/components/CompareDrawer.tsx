@@ -11,16 +11,16 @@ export function CompareDrawer({ matches, activeBookingTripId, onClose, onBook }:
     : `shares ${recommended.routeOverlapPercent - other.routeOverlapPercent}% more of your route`
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/35 p-3 backdrop-blur-sm sm:items-center" role="dialog" aria-modal="true" aria-label="Compare rides">
-      <div className="max-h-[94vh] w-full max-w-3xl overflow-auto rounded-[28px] bg-white p-5 shadow-2xl sm:p-8">
+    <div className="dialog-overlay z-50" role="dialog" aria-modal="true" aria-label="Compare rides">
+      <div className="dialog-panel max-w-3xl">
         <div className="flex items-start justify-between gap-4">
           <div><span className="eyebrow">Compare rides</span><h2 className="mt-2 text-2xl font-black tracking-[-0.03em] text-ink">Two good ways to go.</h2></div>
           <button onClick={onClose} className="icon-button" aria-label="Close comparison"><X className="h-5 w-5" /></button>
         </div>
 
-        <div className="mt-7 grid grid-cols-[minmax(90px,0.8fr)_1fr_1fr] overflow-hidden rounded-2xl border border-slate-200 text-sm">
+        <div className="comparison-grid mt-6 grid overflow-hidden rounded-xl border border-slate-200 text-sm">
           <div className="bg-slate-50 p-4" />
-          {[first, second].map((match) => <div key={match.trip.id} className={`border-l border-slate-200 p-4 ${match === recommended ? 'bg-mint-50' : 'bg-slate-50'}`}><div className="flex items-center gap-2"><span className="grid h-8 w-8 place-items-center rounded-xl text-[11px] font-black text-white" style={{ backgroundColor: match.driver.accent }}>{match.driver.initials}</span><strong className="text-ink">{match.driver.name}</strong></div>{match === recommended && <span className="mt-2 inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-mint-600"><Check className="h-3 w-3" /> Recommended</span>}</div>)}
+          {[first, second].map((match) => <div key={match.trip.id} className={`border-l border-slate-200 p-4 ${match === recommended ? 'bg-mint-50' : 'bg-slate-50'}`}><div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center"><span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl text-[11px] font-semibold text-white" style={{ backgroundColor: match.driver.accent }}>{match.driver.initials}</span><strong className="text-xs font-semibold text-ink sm:text-sm">{match.driver.name}</strong></div>{match === recommended && <span className="mt-2 inline-flex items-center gap-1 text-[9px] font-semibold uppercase text-mint-600"><Check className="h-3 w-3 shrink-0" />Best fit</span>}</div>)}
           <ComparisonRow label="Match" icon={Sparkles} values={[`${first.compatibilityScore}%`, `${second.compatibilityScore}%`]} />
           <ComparisonRow label="Overlap" icon={Route} values={[`${first.routeOverlapPercent}%`, `${second.routeOverlapPercent}%`]} />
           <ComparisonRow label="Detour" icon={Clock3} values={[`+${first.detourMinutes} min`, `+${second.detourMinutes} min`]} />
@@ -37,5 +37,5 @@ export function CompareDrawer({ matches, activeBookingTripId, onClose, onBook }:
 }
 
 function ComparisonRow({ label, icon: Icon, values }: { label: string; icon: typeof Route; values: [string, string] }) {
-  return <><div className="flex items-center gap-2 border-t border-slate-200 p-3 text-xs font-bold text-slate-500"><Icon className="h-3.5 w-3.5" />{label}</div>{values.map((value, index) => <div key={`${label}-${index}`} className="border-l border-t border-slate-200 p-3 font-extrabold text-ink">{value}</div>)}</>
+  return <><div className="comparison-label flex items-center gap-2 border-t border-slate-200 p-3 text-xs font-medium text-slate-500"><Icon className="h-3.5 w-3.5" />{label}</div>{values.map((value, index) => <div key={`${label}-${index}`} className="border-l border-t border-slate-200 p-3 font-semibold text-ink">{value}</div>)}</>
 }

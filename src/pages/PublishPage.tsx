@@ -104,11 +104,11 @@ export function PublishPage({ user, trips, onNavigate, onPublished, onTripsCompl
 
   if (activeTrips.length) {
     return (
-      <main className="mx-auto max-w-6xl px-5 py-8 lg:px-8">
+      <main className="page-container">
         <button onClick={() => onNavigate('home')} className="inline-flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-ink"><ArrowLeft className="h-4 w-4" />Back</button>
         <div className="mt-4"><ModeGuide mode="driver" /></div>
-        <div className="mt-5 grid gap-6 lg:grid-cols-[420px_1fr]">
-          <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-card">
+        <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,420px)_minmax(0,1fr)] lg:gap-8">
+          <section className="form-panel">
             <div className="flex items-center justify-between gap-3"><span className="eyebrow">Current trip</span><span className="inline-flex items-center gap-1.5 rounded-full bg-mint-50 px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-mint-600"><span className="h-2 w-2 rounded-full bg-mint-500" />Active</span></div>
             <h1 className="mt-3 text-3xl font-black tracking-[-0.04em] text-ink">Your trip is visible to passengers.</h1>
             <p className="mt-3 text-sm leading-6 text-slate-500">Test passenger matching now, or end this trip when the journey is complete. Ending it also completes its passenger bookings.</p>
@@ -131,7 +131,7 @@ export function PublishPage({ user, trips, onNavigate, onPublished, onTripsCompl
             <button onClick={() => onNavigate('search')} className="btn-primary mt-6 w-full">Test as passenger <ArrowRight className="h-4 w-4" /></button>
             <button onClick={handleComplete} disabled={completing} className="btn-secondary mt-3 w-full text-slate-600">{completing ? <><LoaderCircle className="h-4 w-4 animate-spin" />Ending trip…</> : <><CheckCircle2 className="h-4 w-4" />End trip and create a new one</>}</button>
           </section>
-          <div className="space-y-4">
+          <div className="min-w-0 space-y-4">
             <div className="relative">
               <MapPanel origin={activeTrip.origin} destination={activeTrip.destination} route={activeRoute ?? undefined} title={`${user.name}'s road route`} />
               {activeRouteLoading && <div className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-xl bg-white px-3 py-2 text-xs font-bold text-slate-500 shadow-card"><LoaderCircle className="h-3.5 w-3.5 animate-spin" />Loading road route…</div>}
@@ -144,29 +144,29 @@ export function PublishPage({ user, trips, onNavigate, onPublished, onTripsCompl
   }
 
   return (
-    <main className="mx-auto max-w-7xl px-5 py-8 lg:px-8">
+    <main className="page-container">
       <button onClick={() => onNavigate('home')} className="inline-flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-ink"><ArrowLeft className="h-4 w-4" />Back</button>
       <div className="mt-4"><ModeGuide mode="driver" /></div>
-      <div className="mt-5 grid gap-6 lg:grid-cols-[440px_1fr]">
-        <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-card">
-          <span className="eyebrow">Driver trip</span><h1 className="mt-3 text-3xl font-black tracking-[-0.04em] text-ink">Where are you already going?</h1><p className="mt-2 text-sm leading-6 text-slate-500">Publish your planned journey. Along only suggests passengers who fit your direction and detour limit.</p>
+      <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,440px)_minmax(0,1fr)] lg:gap-8">
+        <section className="form-panel">
+          <span className="eyebrow">Driver trip</span><h1 className="mt-3 text-[28px] font-semibold leading-tight tracking-[-0.04em] text-ink sm:text-[32px]">Where are you already going?</h1><p className="mt-3 text-sm leading-6 text-slate-500">Publish your planned journey. Along only suggests passengers who fit your direction and detour limit.</p>
           <div className="mt-7 space-y-5"><LocationInput label="From" value={origin} onChange={setOrigin} /><LocationInput label="To" value={destination} onChange={setDestination} />
-            <div className="grid grid-cols-2 gap-3"><InputField label="Date" icon={Calendar}><input type="date" value={date} min={todayISO()} onChange={(event) => setDate(event.target.value)} className="field pl-10" /></InputField><InputField label="Departure" icon={Clock3}><input type="time" value={time} onChange={(event) => setTime(event.target.value)} className="field pl-10" /></InputField></div>
+            <div className="date-time-row grid grid-cols-2 gap-3"><InputField label="Date" icon={Calendar}><input type="date" value={date} min={todayISO()} onChange={(event) => setDate(event.target.value)} className="field pl-10" /></InputField><InputField label="Departure" icon={Clock3}><input type="time" value={time} onChange={(event) => setTime(event.target.value)} className="field pl-10" /></InputField></div>
             <div className="grid grid-cols-2 gap-3"><InputField label="Available seats" icon={Users}><select value={seats} onChange={(event) => setSeats(Number(event.target.value))} className="field pl-10">{[1, 2, 3, 4].map((number) => <option key={number}>{number}</option>)}</select></InputField><InputField label="Max detour" icon={Gauge}><select value={detour} onChange={(event) => setDetour(Number(event.target.value))} className="field pl-10">{[5, 10, 15, 20, 30, 35, 45, 60].map((number) => <option value={number} key={number}>{number} min</option>)}</select></InputField></div>
           </div>
           {error && <p className="mt-4 rounded-xl bg-red-50 p-3 text-sm font-semibold text-red-700">{error}</p>}
           <button onClick={handlePublish} disabled={!route || publishing} className="btn-primary mt-7 w-full py-3.5">{publishing ? <><LoaderCircle className="h-4 w-4 animate-spin" />Publishing…</> : <>Publish trip <ArrowRight className="h-4 w-4" /></>}</button>
           <p className="mt-3 text-center text-[11px] leading-5 text-slate-400">This draft stays private until you press Publish. Choose up to 60 minutes for longer cross-city trips.</p>
         </section>
-        <div className="space-y-4"><MapPanel origin={origin} destination={destination} route={route ?? undefined} title="Your planned route" />
+        <div className="min-w-0 space-y-4"><MapPanel origin={origin} destination={destination} route={route ?? undefined} title="Your planned route" />
           <div className="grid grid-cols-3 gap-3">{calculating ? <div className="col-span-3 flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white p-4 text-sm font-bold text-slate-500"><LoaderCircle className="h-4 w-4 animate-spin" />Calculating route…</div> : route && <><RouteStat label="Distance" value={formatDistance(route.distanceMeters)} /><RouteStat label="Driving time" value={formatDuration(route.durationSeconds)} /><RouteStat label="Arrival" value={`~${formatTime(addMinutes(combineDateTime(date, time), route.durationSeconds / 60))}`} /></>}</div>
-          <div className="rounded-2xl border border-mint-100 bg-mint-50 p-4 text-sm leading-6 text-mint-600"><strong>Driver-first matching:</strong> passenger requests are checked against your existing trip. Your route is never created on demand.</div>
+          <div className="map-context"><strong className="font-medium text-ink">Driver-first matching:</strong> passenger requests are checked against your existing trip. Your route is never created on demand.</div>
         </div>
       </div>
     </main>
   )
 }
 
-function InputField({ label, icon: Icon, children }: { label: string; icon: typeof Calendar; children: React.ReactNode }) { return <label className="block"><span className="mb-2 block text-xs font-bold uppercase tracking-[0.12em] text-slate-500">{label}</span><div className="relative"><Icon className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />{children}</div></label> }
-function RouteStat({ label, value }: { label: string; value: string }) { return <div className="rounded-2xl border border-slate-200 bg-white p-4 text-center"><p className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">{label}</p><strong className="mt-1 block text-base text-ink">{value}</strong></div> }
+function InputField({ label, icon: Icon, children }: { label: string; icon: typeof Calendar; children: React.ReactNode }) { return <label className="block"><span className="mb-2 block text-xs font-bold uppercase tracking-[0.12em] text-slate-500">{label}</span><div className="labeled-field relative"><Icon className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />{children}</div></label> }
+function RouteStat({ label, value }: { label: string; value: string }) { return <div className="min-w-0 border-t border-slate-200 px-2 py-3 sm:px-4"><p className="text-[11px] font-medium text-slate-500">{label}</p><strong className="mt-1 block text-base font-semibold text-ink">{value}</strong></div> }
 function formatTripDate(dateTime: string) { return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' }).format(new Date(dateTime)) }

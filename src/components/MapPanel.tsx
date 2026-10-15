@@ -158,7 +158,7 @@ export function MapPanel({ origin, destination, route, match, secondaryMatch, ti
   }, [destination, mapInstance, match, origin, paths])
 
   return (<>
-    <section className="map-shell relative min-h-[360px] overflow-hidden rounded-[28px] bg-[#EAF1F5]" aria-label={title}>
+    <section className="map-shell relative overflow-hidden rounded-2xl bg-slate-100" aria-label={title}>
       <div ref={mapRef} className={`absolute inset-0 ${mapFailed ? 'invisible' : ''}`} aria-hidden={mapFailed} />
       {!mapInstance && !mapFailed && <div role="status" className="absolute inset-0 grid place-items-center text-sm font-semibold text-slate-500">Loading Longdo map…</div>}
       {mapFailed && <div key="fallback" className="absolute inset-0" aria-label={`${title} fallback diagram`}>

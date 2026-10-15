@@ -65,19 +65,22 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F7F9FC] text-ink">
-      <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-[#F7F9FC]/90 backdrop-blur-xl">
-        <div className="mx-auto flex h-20 max-w-[1500px] items-center gap-4 px-5 lg:px-8">
+    <div className="app-shell min-h-screen bg-[#F7F6F0] text-ink">
+      <header className="sticky top-0 z-40 border-b border-slate-200 bg-[#F7F6F0]">
+        <div className="mx-auto flex h-16 max-w-[1400px] items-center gap-3 px-4 sm:h-[76px] sm:px-6 lg:px-10">
           <button onClick={() => navigate('home')} aria-label="Along home"><Logo /></button>
-          <nav className="ml-auto hidden items-center gap-1 sm:flex">
-            <button onClick={() => navigate('search')} className={`nav-button ${page === 'search' ? 'nav-button-active' : ''}`}><Search className="h-4 w-4" />Passenger</button>
-            <button onClick={() => navigate('publish')} className={`nav-button ${page === 'publish' ? 'nav-button-active' : ''}`}><CarFront className="h-4 w-4" />Driver</button>
+          <nav aria-label="Main navigation" className="ml-auto flex items-center gap-1">
+            <button onClick={() => navigate('search')} aria-current={page === 'search' ? 'page' : undefined} className={`nav-button ${page === 'search' ? 'nav-button-active' : ''}`}><Search className="h-4 w-4" />Passenger</button>
+            <button onClick={() => navigate('publish')} aria-current={page === 'publish' ? 'page' : undefined} className={`nav-button ${page === 'publish' ? 'nav-button-active' : ''}`}><CarFront className="h-4 w-4" />Driver</button>
           </nav>
-          <div className="hidden xl:block"><StatusPill storageMode={storageMode} routingMode={isLiveRoutingConfigured() ? 'longdo' : 'demo'} /></div>
-          <div className="hidden md:block"><DemoBar user={user} users={demoUsers} onUserChange={changeUser} onReset={handleReset} /></div>
-          <div className="ml-auto flex gap-2 sm:hidden"><button onClick={() => navigate('search')} className="icon-button" aria-label="Passenger mode"><Search className="h-5 w-5" /></button><button onClick={() => navigate('publish')} className="icon-button" aria-label="Driver mode"><CarFront className="h-5 w-5" /></button></div>
+          <span className="ml-5 hidden border-l border-slate-200 pl-6 text-xs text-slate-500 lg:block">A shared way through Bangkok.</span>
         </div>
-        <div className="border-t border-slate-200 px-4 py-2 md:hidden"><DemoBar user={user} users={demoUsers} onUserChange={changeUser} onReset={handleReset} /></div>
+        <div className="border-t border-slate-200 bg-[#EEEFE7]">
+          <div className="mx-auto flex min-h-11 max-w-[1400px] items-center justify-between gap-5 px-4 py-1 sm:px-6 lg:px-10">
+            <div className="hidden shrink-0 md:block"><StatusPill storageMode={storageMode} routingMode={isLiveRoutingConfigured() ? 'longdo' : 'demo'} /></div>
+            <DemoBar user={user} users={demoUsers} onUserChange={changeUser} onReset={handleReset} />
+          </div>
+        </div>
       </header>
 
       {page === 'home' && <LandingPage onNavigate={navigate} />}
@@ -85,7 +88,7 @@ export default function App() {
       {page === 'search' && <SearchPage key={`${user.id}-${resetVersion}`} user={user.role === 'passenger' ? user : demoUsers[4]} trips={trips} onNavigate={navigate} onTripUpdate={(trip) => setTrips((current) => current.map((item) => item.id === trip.id ? trip : item))} />}
 
       {resetNotice && <div className="fixed bottom-5 left-1/2 z-[80] -translate-x-1/2 rounded-full bg-ink px-5 py-3 text-sm font-bold text-white shadow-2xl">Demo reset — drafts restored and published rides cleared.</div>}
-      <footer className="border-t border-slate-200 bg-white px-5 py-7"><div className="mx-auto flex max-w-7xl flex-col gap-3 text-xs text-slate-400 sm:flex-row sm:items-center sm:justify-between"><p>Along · U-Hackathon prototype</p><p>Verification badges and route estimates are demo data unless live services are connected.</p></div></footer>
+      <footer className="mt-6 border-t border-slate-200 px-5 py-7"><div className="mx-auto flex max-w-[1300px] flex-col gap-3 text-[11px] leading-5 text-slate-500 sm:flex-row sm:items-center sm:justify-between"><p className="shrink-0 font-semibold text-ink">along / Bangkok · U-Hackathon prototype</p><p className="max-w-lg sm:text-right">Verification badges and route estimates are demo data unless live services are connected.</p></div></footer>
     </div>
   )
 }

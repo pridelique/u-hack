@@ -13,8 +13,8 @@ interface Props {
 
 export function BookingModal({ match, search, state, error, onClose, onConfirm }: Props) {
   return (
-    <div className="fixed inset-0 z-[60] flex items-end justify-center bg-ink/40 p-3 backdrop-blur-sm sm:items-center" role="dialog" aria-modal="true" aria-label="Confirm booking">
-      <div className="w-full max-w-md rounded-[28px] bg-white p-6 shadow-2xl sm:p-8">
+    <div className="dialog-overlay z-[60]" role="dialog" aria-modal="true" aria-label="Confirm booking">
+      <div className="dialog-panel max-w-md">
         {state === 'success' ? (
           <div className="py-6 text-center">
             <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-mint-50 text-mint-600"><CheckCircle2 className="h-8 w-8" /></div>
