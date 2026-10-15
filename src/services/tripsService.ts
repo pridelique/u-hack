@@ -2,9 +2,8 @@ import {
   collection, doc, getDocs, runTransaction, setDoc, writeBatch,
 } from 'firebase/firestore'
 import { createDemoTrips } from '../data/demoTrips'
-import { demoUsers } from '../data/demoUsers'
 import type { Booking, MatchResult, Trip } from '../types'
-import { db } from './firebase'
+import { getFirebaseDb } from './firebase'
 
 const TRIPS_KEY = 'along-demo-trips-v2'
 const BOOKINGS_KEY = 'along-demo-bookings-v2'
@@ -23,7 +22,7 @@ const readLocalTrips = (): Trip[] => {
 const saveLocalTrips = (trips: Trip[]) => localStorage.setItem(TRIPS_KEY, JSON.stringify(trips))
 
 export const loadTrips = async (): Promise<{ trips: Trip[]; mode: 'firebase' | 'demo' }> => {
-  const firestore = db
+  const firestore = await getFirebaseDb()
   if (firestore) {
     try {
       const snapshot = await getDocs(collection(firestore, 'trips'))
@@ -31,7 +30,6 @@ export const loadTrips = async (): Promise<{ trips: Trip[]; mode: 'firebase' | '
       const trips = createDemoTrips()
       const batch = writeBatch(firestore)
       trips.forEach((trip) => batch.set(doc(firestore, 'trips', trip.id), trip))
-      demoUsers.forEach((user) => batch.set(doc(firestore, 'users', user.id), user))
       await batch.commit()
       saveLocalTrips(trips)
       return { trips, mode: 'firebase' }
@@ -43,9 +41,10 @@ export const loadTrips = async (): Promise<{ trips: Trip[]; mode: 'firebase' | '
 export const publishTrip = async (trip: Trip): Promise<'firebase' | 'demo'> => {
   const trips = readLocalTrips().filter((item) => item.id !== trip.id)
   saveLocalTrips([trip, ...trips])
-  if (db) {
+  const firestore = await getFirebaseDb()
+  if (firestore) {
     try {
-      await setDoc(doc(db, 'trips', trip.id), trip)
+      await setDoc(doc(firestore, 'trips', trip.id), trip)
       return 'firebase'
     } catch { /* local copy is still usable */ }
   }
@@ -75,7 +74,7 @@ const createBookingFromMatch = (match: MatchResult, passengerId: string): Bookin
 
 export const bookMatch = async (match: MatchResult, passengerId: string, pickup: Booking['pickup'], dropoff: Booking['dropoff']) => {
   const booking = { ...createBookingFromMatch(match, passengerId), pickup, dropoff }
-  const firestore = db
+  const firestore = await getFirebaseDb()
 
   if (firestore) {
     try {
@@ -110,12 +109,11 @@ export const resetDemo = async () => {
   const trips = createDemoTrips()
   saveLocalTrips(trips)
   localStorage.setItem(BOOKINGS_KEY, '[]')
-  const firestore = db
+  const firestore = await getFirebaseDb()
   if (firestore) {
     try {
       const batch = writeBatch(firestore)
       trips.forEach((trip) => batch.set(doc(firestore, 'trips', trip.id), trip))
-      demoUsers.forEach((user) => batch.set(doc(firestore, 'users', user.id), user))
       await batch.commit()
     } catch { /* demo reset remains complete locally */ }
   }

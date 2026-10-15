@@ -10,16 +10,16 @@
     "typecheck": "tsc -b --pretty false"
   },
   "dependencies": {
-    "firebase": "^12.4.0",
+    "firebase": "^12.19.0",
     "lucide-react": "^0.545.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
   },
   "devDependencies": {
-    "@vercel/node": "^5.3.24",
     "@types/node": "^24.7.2",
     "@types/react": "^19.1.16",
     "@types/react-dom": "^19.1.9",
+    "@vercel/node": "^5.3.24",
     "@vitejs/plugin-react": "^5.0.4",
     "autoprefixer": "^10.4.21",
     "postcss": "^8.5.6",
