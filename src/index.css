@@ -1,0 +1,25 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { @apply box-border; }
+  html { scroll-behavior: smooth; }
+  body { @apply m-0 min-w-[320px] bg-[#F7F9FC] font-sans antialiased; }
+  button, input, select { font: inherit; }
+  button { @apply cursor-pointer; }
+  button:disabled { @apply cursor-not-allowed opacity-55; }
+  ::selection { @apply bg-along-100 text-along-700; }
+}
+
+@layer components {
+  .btn-primary { @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-along-600 px-4 text-sm font-extrabold text-white shadow-sm transition hover:bg-along-700 focus:outline-none focus:ring-4 focus:ring-along-100; }
+  .btn-secondary { @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-extrabold text-ink transition hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-slate-100; }
+  .icon-button { @apply grid h-10 w-10 place-items-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50 hover:text-ink; }
+  .nav-button { @apply inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-500 transition hover:bg-white hover:text-ink; }
+  .nav-button-active { @apply bg-white text-ink shadow-sm; }
+  .field { @apply h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-ink outline-none transition placeholder:text-slate-400 focus:border-along-500 focus:ring-4 focus:ring-along-50; }
+  .eyebrow { @apply inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.17em] text-along-600; }
+  .map-shell { min-height: clamp(360px, 58vh, 700px); }
+}
